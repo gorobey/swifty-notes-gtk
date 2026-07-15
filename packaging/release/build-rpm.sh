@@ -3,13 +3,16 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: build-rpm.sh --install-root ROOT --output OUTPUT_DIR [--version VERSION]
+Usage: build-rpm.sh --output OUTPUT_DIR [--install-root ROOT] [--version VERSION]
+
+If --install-root is omitted the project is built and staged automatically.
 EOF
 }
 
 version=""
 install_root=""
 output_dir=""
+auto_root=""
 package_name="swifty-notes-gtk"
 
 while [ "$#" -gt 0 ]; do
@@ -38,7 +41,7 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ -z "$install_root" ] || [ -z "$output_dir" ]; then
+if [ -z "$output_dir" ]; then
     usage >&2
     exit 1
 fi
@@ -52,6 +55,14 @@ if ! command -v rpmbuild >/dev/null 2>&1; then
     exit 1
 fi
 
+if [ -z "$install_root" ]; then
+    auto_root="$(mktemp -d)"
+    install_root="$auto_root"
+    assemble_args=(--dest "$auto_root" --prefix /usr)
+    [ -n "$version" ] && assemble_args+=(--version "$version")
+    "${script_dir}/assemble-install-root.sh" "${assemble_args[@]}"
+fi
+
 if [ ! -d "$install_root/usr" ]; then
     echo "Expected /usr install tree under ${install_root}" >&2
     exit 1
@@ -62,6 +73,9 @@ top_dir="$(mktemp -d)"
 build_arch="$(rpmbuild --eval '%{_arch}')"
 cleanup() {
     rm -rf "$top_dir"
+    if [ -n "$auto_root" ]; then
+        rm -rf "$auto_root"
+    fi
 }
 trap cleanup EXIT
 
