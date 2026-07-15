@@ -117,9 +117,10 @@ Release packaging assets live under `packaging/` and `data/`.
 - Build a staged Linux install root: `packaging/release/assemble-install-root.sh --dest packaging/out/install-root-usr --prefix /usr`
 - Build a `.deb` from that root: `packaging/release/build-deb.sh --install-root packaging/out/install-root-usr --output packaging/out/deb`
 - Build `.rpm` artifacts in CI with `packaging/release/build-rpm.sh`
+- Build an `.AppImage` from that root: `packaging/release/build-appimage.sh --install-root packaging/out/install-root-usr --output packaging/out/appimage`
 - Build the macOS `.app` and DMG layout locally with the Xcode project at `packaging/macos/swiftynotes.xcodeproj` plus `scripts/bundle-macos-app.sh` (vendors Homebrew dylibs into the bundle); the CI workflow re-signs with Developer ID, runs `xcrun notarytool submit --wait`, and staples both the `.app` and the resulting DMG before uploading.
 
-GitHub Actions release automation lives in `.github/workflows/release-packages.yml`: it resolves its version from the repository `VERSION` file by default (with an optional `workflow_dispatch` override), fans out into the per-platform builders (deb / rpm on Linux × {x86_64, arm64}, plus a Developer-ID-signed and notarized DMG for Apple Silicon via the reusable `.github/workflows/release-macos.yml`), and finishes by drafting a GitHub release that bundles every uploaded artifact from the run.
+GitHub Actions release automation lives in `.github/workflows/release-packages.yml`: it resolves its version from the repository `VERSION` file by default (with an optional `workflow_dispatch` override), fans out into the per-platform builders (deb / rpm on Linux × {x86_64, arm64}, AppImage on Linux x86_64, plus a Developer-ID-signed and notarized DMG for Apple Silicon via the reusable `.github/workflows/release-macos.yml`), and finishes by drafting a GitHub release that bundles every uploaded artifact from the run.
 
 ## CLI
 
