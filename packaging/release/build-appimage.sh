@@ -3,13 +3,16 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: build-appimage.sh --install-root ROOT --output OUTPUT_DIR [--version VERSION]
+Usage: build-appimage.sh --output OUTPUT_DIR [--install-root ROOT] [--version VERSION]
+
+If --install-root is omitted the project is built and staged automatically.
 EOF
 }
 
 version=""
 install_root=""
 output_dir=""
+auto_root=""
 package_name="swifty-notes-gtk"
 
 while [ "$#" -gt 0 ]; do
@@ -38,7 +41,7 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ -z "$install_root" ] || [ -z "$output_dir" ]; then
+if [ -z "$output_dir" ]; then
     usage >&2
     exit 1
 fi
@@ -47,13 +50,21 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 source "${script_dir}/version.sh"
 version="$(resolve_release_version "$version")"
 
-if [ ! -d "$install_root/usr" ]; then
-    echo "Expected /usr install tree under ${install_root}" >&2
+if [ "$(uname -m)" != "x86_64" ]; then
+    echo "AppImage build is currently supported only on x86_64." >&2
     exit 1
 fi
 
-if [ "$(uname -m)" != "x86_64" ]; then
-    echo "AppImage build is currently supported only on x86_64." >&2
+if [ -z "$install_root" ]; then
+    auto_root="$(mktemp -d)"
+    install_root="$auto_root"
+    assemble_args=(--dest "$auto_root" --prefix /usr)
+    [ -n "$version" ] && assemble_args+=(--version "$version")
+    "${script_dir}/assemble-install-root.sh" "${assemble_args[@]}"
+fi
+
+if [ ! -d "$install_root/usr" ]; then
+    echo "Expected /usr install tree under ${install_root}" >&2
     exit 1
 fi
 
@@ -63,6 +74,9 @@ tools_dir="${work_dir}/tools"
 appdir="${work_dir}/AppDir"
 cleanup() {
     rm -rf "$work_dir"
+    if [ -n "$auto_root" ]; then
+        rm -rf "$auto_root"
+    fi
 }
 trap cleanup EXIT
 
