@@ -4,8 +4,6 @@
 
 Native GTK markdown notes for Linux and macOS, written in Swift with `swift-adwaita`.
 
-<a href="https://flathub.org/en/apps/me.spaceinbox.swiftynotes"><img height="56" alt="Get it on Flathub" src="https://flathub.org/api/badge?locale=en"/></a> <a href="https://snapcraft.io/swifty-notes"><img alt="Get it from the Snap Store" src=https://snapcraft.io/en/dark/install.svg /></a>
-
 On macOS the release workflow produces a Developer-ID-signed, notarized, stapled `.dmg` for Apple Silicon — see [Releases](https://github.com/makoni/swifty-notes-gtk/releases) for the latest build.
 
 <img alt="Swift Adwaita" src="https://spaceinbox.me/images/swifty-notes-demo.gif">
@@ -114,15 +112,15 @@ The smoke tests require a working session bus and tools such as `weston` and `py
 
 ## Release packaging
 
-Release packaging assets live under `packaging/`, `snap/`, and `data/`.
+Release packaging assets live under `packaging/` and `data/`.
 
 - Build a staged Linux install root: `packaging/release/assemble-install-root.sh --dest packaging/out/install-root-usr --prefix /usr`
 - Build a `.deb` from that root: `packaging/release/build-deb.sh --install-root packaging/out/install-root-usr --output packaging/out/deb`
-- Build a source-built `.flatpak` bundle: `packaging/release/build-flatpak.sh --output packaging/out/flatpak`
+- Build an `.AppImage` from that root: `packaging/release/build-appimage.sh --install-root packaging/out/install-root-usr --output packaging/out/appimage`
 - Build `.rpm` artifacts in CI with `packaging/release/build-rpm.sh`
 - Build the macOS `.app` and DMG layout locally with the Xcode project at `packaging/macos/swiftynotes.xcodeproj` plus `scripts/bundle-macos-app.sh` (vendors Homebrew dylibs into the bundle); the CI workflow re-signs with Developer ID, runs `xcrun notarytool submit --wait`, and staples both the `.app` and the resulting DMG before uploading.
 
-The Flatpak manifest template lives in `flatpak/me.spaceinbox.swiftynotes.yml.in` and pins the SwiftPM dependency sources used in CI. GitHub Actions release automation lives in `.github/workflows/release-packages.yml`: it resolves its version from the repository `VERSION` file by default (with an optional `workflow_dispatch` override), fans out into the per-platform builders (deb / rpm / flatpak / snap on Linux × {x86_64, arm64}, plus a Developer-ID-signed and notarized DMG for Apple Silicon via the reusable `.github/workflows/release-macos.yml`), and finishes by drafting a GitHub release that bundles every uploaded artifact from the run.
+GitHub Actions release automation lives in `.github/workflows/release-packages.yml`: it resolves its version from the repository `VERSION` file by default (with an optional `workflow_dispatch` override), fans out into the per-platform builders (deb / rpm on Linux × {x86_64, arm64}, AppImage on Linux x86_64, plus a Developer-ID-signed and notarized DMG for Apple Silicon via the reusable `.github/workflows/release-macos.yml`), and finishes by drafting a GitHub release that bundles every uploaded artifact from the run.
 
 ## CLI
 
@@ -173,40 +171,7 @@ After that, `swiftynotes cli ...` works from any terminal once
 is on your `PATH`. The macOS CLI reads from and writes to the same
 notes folder configured in the GUI's Settings → Notes folder.
 
-If you installed from Flathub, use the Flatpak form:
-
-```bash
-flatpak run me.spaceinbox.swiftynotes cli list
-flatpak run me.spaceinbox.swiftynotes cli list --folder Work
-flatpak run me.spaceinbox.swiftynotes cli folders
-flatpak run me.spaceinbox.swiftynotes cli folders create Work/Drafts
-flatpak run me.spaceinbox.swiftynotes cli folders rename Work/Drafts Outbox
-flatpak run me.spaceinbox.swiftynotes cli folders move Outbox --to Personal
-flatpak run me.spaceinbox.swiftynotes cli folders rm Personal/Outbox --yes
-flatpak run me.spaceinbox.swiftynotes cli get <note-id>
-flatpak run me.spaceinbox.swiftynotes cli get <note-id> --raw
-flatpak run me.spaceinbox.swiftynotes cli create --content '# Title\n\nBody'
-flatpak run me.spaceinbox.swiftynotes cli create --content '# Draft' --folder Work/Drafts
-flatpak run me.spaceinbox.swiftynotes cli move <note-id> --folder Personal
-flatpak run me.spaceinbox.swiftynotes cli update <note-id> --stdin
-```
-
-If you want a short host command for a Flathub install, create a local wrapper:
-
-```bash
-mkdir -p ~/.local/bin
-cat > ~/.local/bin/swiftynotes <<'EOF'
-#!/bin/sh
-exec flatpak run me.spaceinbox.swiftynotes "$@"
-EOF
-chmod +x ~/.local/bin/swiftynotes
-```
-
-After that, `swiftynotes cli ...` works from the host shell as long as `~/.local/bin` is in your `PATH`.
-
 `update` replaces the full markdown content of the target note. The CLI emits JSON that is easy to drive from scripts, shell pipelines, and AI agents while still operating on the same file-backed notes as the desktop app.
-
-If you run the CLI outside Flatpak and have no host notes folder or host settings configured yet, it automatically falls back to the default Flathub data under `~/.var/app/me.spaceinbox.swiftynotes/`, so it can still see notes created by the Flatpak GUI.
 
 ## Storage
 

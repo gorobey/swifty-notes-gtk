@@ -4,7 +4,6 @@ import Foundation
 import PackageDescription
 
 let environment = ProcessInfo.processInfo.environment
-let useBundledSwiftPMDependencies = environment["SWIFTY_NOTES_USE_BUNDLED_SWIFTPM_DEPS"] == "1"
 let localSwiftAdwaitaPath = environment["SWIFTY_NOTES_LOCAL_SWIFT_ADWAITA_PATH"]?
     .trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -13,14 +12,10 @@ func packagePathExists(_ path: String) -> Bool {
 }
 
 func sourceDependency(
-    bundledPath: String,
     overridePath: String? = nil,
     remoteURL: String,
     revision: String
 ) -> Package.Dependency {
-    if useBundledSwiftPMDependencies, packagePathExists(bundledPath) {
-        return .package(path: bundledPath)
-    }
     if let overridePath, !overridePath.isEmpty, packagePathExists(overridePath) {
         return .package(path: overridePath)
     }
@@ -28,14 +23,10 @@ func sourceDependency(
 }
 
 func sourceDependency(
-    bundledPath: String,
     overridePath: String? = nil,
     remoteURL: String,
     minimumVersion: Version
 ) -> Package.Dependency {
-    if useBundledSwiftPMDependencies, packagePathExists(bundledPath) {
-        return .package(path: bundledPath)
-    }
     if let overridePath, !overridePath.isEmpty, packagePathExists(overridePath) {
         return .package(path: overridePath)
     }
@@ -69,7 +60,6 @@ let package = Package(
     ],
     dependencies: [
         sourceDependency(
-            bundledPath: "flatpak-deps/swift-adwaita",
             overridePath: localSwiftAdwaitaPath,
             remoteURL: "https://github.com/makoni/swift-adwaita.git",
             // Pinned past the 1.5.0 release to pick up Window.isActive
@@ -79,12 +69,10 @@ let package = Package(
             revision: "e725f39c4308138da251a8181beb0a40d86efea9"
         ),
         sourceDependency(
-            bundledPath: "flatpak-deps/swift-markdown",
             remoteURL: "https://github.com/swiftlang/swift-markdown.git",
             revision: "55d66d9a9e8d4fd3f48d111b0d437e82fe451903"
         ),
         sourceDependency(
-            bundledPath: "flatpak-deps/swift-cmark",
             remoteURL: "https://github.com/swiftlang/swift-cmark.git",
             minimumVersion: Version(0, 7, 0)
         )

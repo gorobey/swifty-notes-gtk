@@ -87,9 +87,9 @@ final class MainWindow {
     /// `preview.rootScroll` directly.
     let previewPaneContent = Box(orientation: .vertical, spacing: 0)
     let editorFormattingToolbar = EditorFormattingToolbar()
-    let newNoteButton = Button(icon: .custom("list-add-symbolic"))
-    let newFolderButton = Button(icon: .custom("folder-new-symbolic"))
-    let saveNoteButton = Button(icon: .custom("document-save-symbolic"))
+    let newNoteButton = MainWindow.iconButton(named: "list-add-symbolic")
+    let newFolderButton = MainWindow.iconButton(named: "folder-new-symbolic")
+    let saveNoteButton = MainWindow.iconButton(named: "document-save-symbolic")
     let deleteNoteButton = Button(icon: .userTrash)
     let menuButton = MenuButton(icon: .custom("open-menu-symbolic"))
     let toastOverlay = ToastOverlay()
