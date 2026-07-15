@@ -247,7 +247,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - resolve-version
-      - prepare-install-roots
 
     steps:
       - name: Check out repository
@@ -257,24 +256,27 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
+            appstream \
             desktop-file-utils \
             file \
             fuse \
+            libadwaita-1-dev \
+            libcurl4-openssl-dev \
+            libgtk-4-dev \
+            libgtksourceview-5-dev \
+            libspelling-1-dev \
             patchelf \
             zsync
 
-      - name: Download /usr install root
-        uses: actions/download-artifact@v8
-        with:
-          name: swifty-notes-gtk-${{ needs.resolve-version.outputs.version }}-linux-x86_64-install-root.tar.gz
-          path: packaging/out/install-root-archive
-
-      - name: Extract /usr install root
+      - name: Assemble /usr install root
         run: |
           rm -rf packaging/out/install-root-usr
-          mkdir -p packaging/out/install-root-usr
-          tar -C packaging/out/install-root-usr -xzf \
-            "packaging/out/install-root-archive/swifty-notes-gtk-${{ needs.resolve-version.outputs.version }}-linux-x86_64-install-root.tar.gz"
+          packaging/release/assemble-install-root.sh \
+            --version "${{ needs.resolve-version.outputs.version }}" \
+            --repo-slug "${{ github.repository }}" \
+            --repo-ref "${{ github.sha }}" \
+            --dest packaging/out/install-root-usr \
+            --prefix /usr
 
       - name: Build AppImage
         run: |

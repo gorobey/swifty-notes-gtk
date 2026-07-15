@@ -81,9 +81,13 @@ fi
 
 linuxdeploy_appimage="${tools_dir}/linuxdeploy-x86_64.AppImage"
 appimagetool_appimage="${tools_dir}/appimagetool-x86_64.AppImage"
+linuxdeploy_sha256="4648f278ab3ef31f819e67c30d50f462640e5365a77637d7e6f2ad9fd0b4522a"
+appimagetool_sha256="d918b4df547b388ef253f3c9e7f6529ca81a885395c31f619d9aaf7030499a13"
 
-curl -fsSL "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" -o "$linuxdeploy_appimage"
-curl -fsSL "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -o "$appimagetool_appimage"
+curl -fsSL "https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20250213-2/linuxdeploy-x86_64.AppImage" -o "$linuxdeploy_appimage"
+curl -fsSL "https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage" -o "$appimagetool_appimage"
+echo "${linuxdeploy_sha256}  ${linuxdeploy_appimage}" | sha256sum --check --status
+echo "${appimagetool_sha256}  ${appimagetool_appimage}" | sha256sum --check --status
 chmod 755 "$linuxdeploy_appimage" "$appimagetool_appimage"
 
 APPIMAGE_EXTRACT_AND_RUN=1 \
